@@ -95,8 +95,17 @@ class Client extends Thread
 					}
 					break;
 				case to_server_resign:
+					if (Server.isPlaying(this)==false) return;
+					String opp = Server.isPlayingWith(getUsername());
+					Message msg = new Message(Message.MsgType.to_client_resign);
+					Server.sendMessage(opp, msg);
+					Server.endGame(opp, getUsername());
 					break;
 				case to_server_propose_draw:
+					if (Server.isPlaying(this)==false) return;
+					String opp1 = Server.isPlayingWith(getUsername());
+					Message msg1 = new Message(Message.MsgType.to_client_propose_draw);
+					Server.sendMessage(opp1, msg1);
 					break;
 				case to_server_confirm_invitation:
 					m.setType(Message.MsgType.to_client_send_response_accepted_to_invitation);
@@ -108,8 +117,17 @@ class Client extends Thread
 					Server.sendMessage(m.getDestUsername(), m);
 					break;
 				case to_server_confirm_draw:
+					if (Server.isPlaying(this)==false) return;
+					String opp2 = Server.isPlayingWith(getUsername());
+					Message msg2 = new Message(Message.MsgType.to_client_confirm_draw);
+					Server.sendMessage(opp2, msg2);
+					Server.endGame(opp2, getUsername());
 					break;
 				case to_server_decline_draw:
+					if (Server.isPlaying(this)==false) return;
+					String opp3 = Server.isPlayingWith(getUsername());
+					Message msg3 = new Message(Message.MsgType.to_client_decline_draw);
+					Server.sendMessage(opp3, msg3);
 					break;
 				case to_server_move:
 					if(!Server.isPlaying(this)) continue;
@@ -244,5 +262,9 @@ public class Server extends JFrame{
 				
 				source.getOut().writeObject(msg);
 			}
+		}
+		public static synchronized void endGame(String p1, String p2) throws Exception{
+			games.remove(new Game(p1, p2));
+			games.remove(new Game(p2, p1));
 		}
 }

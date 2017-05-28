@@ -86,6 +86,7 @@ class Receiver extends Thread{
 							int response = JOptionPane.showConfirmDialog(new JFrame(), "User " + fromWhom + " wants to play a game with you", "Invitation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 							m.flipUsers();
 							if (response == JOptionPane.YES_OPTION){
+								ChessWindow.setPlaying(true);
 								m.setType(Message.MsgType.to_server_confirm_invitation);
 								Sender.addMessage(m);
 								ChessWindow.setTurn("white");
@@ -105,6 +106,7 @@ class Receiver extends Thread{
 						break;
 					case to_client_send_response_accepted_to_invitation:
 					{
+						ChessWindow.setPlaying(true);
 						ChessWindow.setTurn("white");
 						ChessWindow.setMyColor("white");
 						JOptionPane.showMessageDialog(new JFrame(), "Invitation accepted", "Response", JOptionPane.INFORMATION_MESSAGE);	
@@ -118,8 +120,28 @@ class Receiver extends Thread{
 						ChessWindow.promptAndSendUsername();
 						break;
 					case to_client_propose_draw:
+						int response = JOptionPane.showConfirmDialog(new JFrame(), "Opponent proposes draw", "Draw", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+						if (response == JOptionPane.YES_OPTION){
+							Message m1 = new Message(Message.MsgType.to_server_confirm_draw);
+							m1.setSourceUsername(ChessWindow.getUsername());
+							Sender.addMessage(m1);
+						} else {
+							Message m1 = new Message(Message.MsgType.to_server_decline_draw);
+							m1.setSourceUsername(ChessWindow.getUsername());
+							Sender.addMessage(m1);
+						}
 						break;
 					case to_client_resign:
+						JOptionPane.showMessageDialog(new JFrame(), "You won! The opponent resigned", "Congrats", JOptionPane.INFORMATION_MESSAGE);	
+						ChessWindow.setPlaying(false);
+						break;
+					case to_client_confirm_draw:
+						JOptionPane.showMessageDialog(new JFrame(), "Draw! The opponent accepted your proposal", "Draw", JOptionPane.INFORMATION_MESSAGE);	
+						ChessWindow.setPlaying(false);
+						break;
+						
+					case to_client_decline_draw:
+						JOptionPane.showMessageDialog(new JFrame(), "The oppenent declined draw", "Info", JOptionPane.INFORMATION_MESSAGE);	
 						break;
 					case to_client_user_already_playing:
 						JOptionPane.showMessageDialog(new JFrame(), "User currently in a game", "Invitation", JOptionPane.ERROR_MESSAGE);
@@ -178,6 +200,7 @@ public class ChessWindow extends JFrame{
 		}
 		public static void setPlaying(boolean isPlaying) {
 			ChessWindow.isPlaying = isPlaying;
+			ChessWindow.restoreBoard();
 		}
 		public static String getMyColor() {
 			return myColor;
@@ -199,7 +222,9 @@ public class ChessWindow extends JFrame{
 			}
 		}
 		
-		
+		public static void restoreBoard(){
+			
+		}
 		public static void promptAndSendUsername(){
 			// prompt for a username
 			setUsername(JOptionPane.showInputDialog(new JFrame(), "Enter Username:", "Dialog",
@@ -222,6 +247,7 @@ public class ChessWindow extends JFrame{
 			promptAndSendUsername();
 			
 			setConnected(true);
+			setPlaying(false);
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			
@@ -275,6 +301,10 @@ public class ChessWindow extends JFrame{
 			inviteButton.addActionListener(lForButton);
 			drawButton = new JButton("Propose draw");
 			resignButton = new JButton("Resign");
+			ListenForButton1 lForButton1  = new ListenForButton1();
+			drawButton.addActionListener(lForButton1);
+			ListenForButton2 lForButton2  = new ListenForButton2();
+			resignButton.addActionListener(lForButton2);
 			//String[] pl = new String[];// { "mihai" , "ana", "ion" , "andrei", "vasea", "vasile"};
 			players = new JComboBox();
 			selectLabel = new JLabel("Select player:");
@@ -370,9 +400,32 @@ public class ChessWindow extends JFrame{
 						Sender.addMessage(m);
 				
 			}
+		}
+		private class ListenForButton1 implements ActionListener{
 
-			
-			
+			@Override
+			// for 'draw' button
+			public void actionPerformed(ActionEvent e) {
+				Message m = new Message(Message.MsgType.to_server_propose_draw);
+				m.setSourceUsername(getUsername());
+				Sender.addMessage(m);
+				
+			}
+		}
+		private class ListenForButton2 implements ActionListener{
+
+			@Override
+			// for 'resign' button
+			public void actionPerformed(ActionEvent e) {
+				Message m = new Message(Message.MsgType.to_server_resign);
+				m.setSourceUsername(getUsername());
+				if(ChessWindow.isPlaying()==false)
+					return;
+				int res = JOptionPane.showConfirmDialog(new JFrame(), "Are you sure you want to resign?", "Resign", JOptionPane.YES_NO_OPTION);
+				if (res == JOptionPane.YES_OPTION)
+					Sender.addMessage(m);
+				
+			}
 		}
 		
 		private void addComp(JPanel thePanel, JComponent comp, int xPos, int yPos, int compWidth, int compHeight, int place, int stretch){

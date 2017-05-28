@@ -24,7 +24,9 @@ public class Message implements Serializable{
 				to_client_resign,
 				to_client_user_already_playing,
 				to_client_move,
-				to_client_new_user
+				to_client_new_user,
+				to_client_confirm_draw,
+				to_client_decline_draw,
 			}
 			private static final HashMap<MsgType, String> map;
 			static
