@@ -405,97 +405,6 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Player {
-		public String color;
-
-		public Player(String color) {
-			this.color = color;
-		}
-
-		public ArrayList<Piece> m_pieces;
-		public ArrayList<Piece> pawns;
-		public Piece queen;
-		public Piece king;
-		public Piece rock1;
-		public Piece rock2;
-		public Piece knight1;
-		public Piece knight2;
-		public Piece bishop1;
-		public Piece bishop2;
-
-		public ArrayList<Piece> getPieces() {
-			return m_pieces;
-		}
-
-		public ArrayList<Piece> getPawns() {
-			return pawns;
-		}
-
-		public Piece getQueen() {
-			return queen;
-		}
-
-		public void setQueen(Piece queen) {
-			this.queen = queen;
-		}
-
-		public Piece getKing() {
-			return king;
-		}
-
-		public void setKing(Piece king) {
-			this.king = king;
-		}
-
-		public Piece getRock1() {
-			return rock1;
-		}
-
-		public void setRock1(Piece rock1) {
-			this.rock1 = rock1;
-		}
-
-		public Piece getRock2() {
-			return rock2;
-		}
-
-		public void setRock2(Piece rock2) {
-			this.rock2 = rock2;
-		}
-
-		public Piece getKnight1() {
-			return knight1;
-		}
-
-		public void setKnight1(Piece knight1) {
-			this.knight1 = knight1;
-		}
-
-		public Piece getKnight2() {
-			return knight2;
-		}
-
-		public void setKnight2(Piece knight2) {
-			this.knight2 = knight2;
-		}
-
-		public Piece getBishop1() {
-			return bishop1;
-		}
-
-		public void setBishop1(Piece bishop1) {
-			this.bishop1 = bishop1;
-		}
-
-		public Piece getBishop2() {
-			return bishop2;
-		}
-
-		public void setBishop2(Piece bishop2) {
-			this.bishop2 = bishop2;
-		}
-	}
-
 	class BoardState {
 		Piece selectedPiece;
 		Cell selectedCell;
@@ -590,9 +499,14 @@ public class ChessWindow extends JFrame {
 		public String m_color;
 		public boolean pieceMoved;
 
-		public Piece(String color) {
+		public Piece(String color, PieceType pieceType, String pieceName) {
 			pieceMoved = false;
 			this.m_color = color;
+			m_type = pieceType;
+			m_pieceName = pieceName;
+			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
+			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
+			m_icon = new ImageIcon(img);
 		}
 
 		public boolean hasPieceMoved() {
@@ -671,12 +585,7 @@ public class ChessWindow extends JFrame {
 
 	class Pawn extends Piece {
 		public Pawn(String color) {
-			super(color);
-			m_type = PieceType.pawn;
-			m_pieceName = "pawn";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.pawn, "pawn");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
@@ -727,12 +636,7 @@ public class ChessWindow extends JFrame {
 
 	class Rook extends Piece {
 		public Rook(String color) {
-			super(color);
-			m_type = PieceType.rook;
-			m_pieceName = "rook";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.rook, "rook");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
@@ -769,12 +673,7 @@ public class ChessWindow extends JFrame {
 
 	class Bishop extends Piece {
 		public Bishop(String color) {
-			super(color);
-			m_type = PieceType.bishop;
-			m_pieceName = "bishop";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.bishop, "bishop");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
@@ -810,13 +709,7 @@ public class ChessWindow extends JFrame {
 		public boolean castlingDone;
 
 		public King(String color) {
-			super(color);
-			castlingDone = false;
-			m_type = PieceType.king;
-			m_pieceName = "king";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.king, "king");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
@@ -875,12 +768,7 @@ public class ChessWindow extends JFrame {
 
 	class Knight extends Piece {
 		public Knight(String color) {
-			super(color);
-			m_type = PieceType.knight;
-			m_pieceName = "knight";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.knight, "knight");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
@@ -907,12 +795,7 @@ public class ChessWindow extends JFrame {
 
 	class Queen extends Piece {
 		public Queen(String color) {
-			super(color);
-			m_type = PieceType.queen;
-			m_pieceName = "queen";
-			Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
-			img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
-			m_icon = new ImageIcon(img);
+			super(color, PieceType.queen, "queen");
 		}
 
 		public boolean isMoveValid(int xx, int yy) {
