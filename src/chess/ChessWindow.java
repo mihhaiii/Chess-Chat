@@ -72,6 +72,7 @@ class Receiver extends Thread{
 	public void run(){
 		try{
 			// asteapta mesaje de la server
+			
 			while(ChessWindow.isConnected()){
 					Message m = (Message)in.readObject();
 					System.out.println("client receives message: " + m);
@@ -151,6 +152,9 @@ public class ChessWindow extends JFrame{
 		public static void setConnected(boolean toSet){
 			isConnected = toSet;
 		}
+		public static boolean isPlaying;	
+		public static String turn;
+		public static String myColor;
 		public static String username;
 		public static String opponentUsername; // null means not playing at the moment
 		public static String getUsername() {
@@ -165,6 +169,32 @@ public class ChessWindow extends JFrame{
 		public static void setOpponentUsername(String opponentUser) {
 			opponentUsername = opponentUser;
 		}
+		public static boolean isPlaying() {
+			return isPlaying;
+		}
+		public static void setPlaying(boolean isPlaying) {
+			ChessWindow.isPlaying = isPlaying;
+		}
+		public static String getMyColor() {
+			return myColor;
+		}
+		public static void setMyColor(String myColor) {
+			ChessWindow.myColor = myColor;
+		}
+		public static String getTurn() {
+			return turn;
+		}
+		public static void setTurn(String myColor) {
+			ChessWindow.turn = myColor;
+		}
+		public static void flipTurn(){
+			if (turn == "white"){
+				turn = "black";
+			}else {
+				turn = "white";
+			}
+		}
+		
 		
 		public static void promptAndSendUsername(){
 			// prompt for a username
@@ -333,9 +363,6 @@ public class ChessWindow extends JFrame{
 				Message m = new Message(Message.MsgType.to_server_invite_player);
 				m.setSourceUsername(getUsername());
 				m.setDestUsername((String)players.getSelectedItem());
-				if (m == null){
-					System.out.println("locul 5");
-				}
 				Sender.addMessage(m);
 				
 			}
@@ -436,34 +463,181 @@ public class ChessWindow extends JFrame{
 				}
 				return false;
 			}
-			return false;
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			Cell cell = (Cell) e.getSource();
-			if (cell != this)
-				return;
-			if (boardState.isSelected()) {
-				// cell is the destination cell
-				Cell source = boardState.getSelectedCell();
-				Cell dest = this;
-				if (source.isMoveValid(getPosX(), getPosY())) {
-
-					Piece piece = source.getPiece();
-					piece.moveTo(dest);
-					boardState.flipTurn();
-					boardState.setSelected(false);
-				} else {
-
-					Piece destPiece = dest.getPiece();
-					if (destPiece != null) {
-						if (destPiece.getColor().equals(boardState.getTurn())) {
-							boardState.setSelected(true);
-							boardState.setSelectedCell(dest);
-							boardState.setSelectedPiece(destPiece);
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!getTurn().equals(getMyColor())){
+					// not my turn, ignore event
+					return;
+				}
+				Cell cell = (Cell) e.getSource();
+				if (cell != this) return;
+				if (boardState.isSelected()){
+					// cell is the destination cell
+					Cell source = boardState.getSelectedCell();
+					Cell dest = this;
+					if (source.isMoveValid(getPosX(),getPosY())){
+						
+						Piece piece = source.getPiece();
+						piece.sendMove(dest);
+						piece.moveTo(dest);
+						boardState.setSelected(false);
+					}else {
+		
+						Piece destPiece = this.getPiece();
+						if (destPiece != null){
+							if (destPiece.getColor().equals(getTurn())){
+								boardState.setSelected(true);
+								boardState.setSelectedCell(dest);
+								boardState.setSelectedPiece(destPiece);
+							} else {
+								// nothing here
+							}
 						} else {
-							// nothing here
+							//boardState.setSelected(false);
+						}
+					}
+				} else {
+					if (isEmpty())
+					{
+						return;
+					}
+					// if the selected piece is not of my color, move on
+					if (!getMyColor().equals(this.getPiece().getColor())){
+						return;
+					}
+					
+					
+					System.out.println("been here " + getTurn() +  " " + getPiece().getColor());
+					boardState.setSelected(true);
+					boardState.setSelectedCell(this);
+					boardState.setSelectedPiece(getPiece());
+				}
+				
+			}
+		}
+		class Player{
+			public String color;
+			public Player(String color){
+				this.color = color;
+			}
+			public ArrayList<Piece> m_pieces;
+			public ArrayList<Piece> pawns;
+			public Piece queen;
+			public Piece king;
+			public Piece rock1;
+			public Piece rock2;
+			public Piece knight1;
+			public Piece knight2;
+			public Piece bishop1;
+			public Piece bishop2;
+			public ArrayList<Piece> getPieces() {
+				return m_pieces;
+			}
+			public ArrayList<Piece> getPawns() {
+				return pawns;
+			}
+			public Piece getQueen() {
+				return queen;
+			}
+			public void setQueen(Piece queen) {
+				this.queen = queen;
+			}
+			public Piece getKing() {
+				return king;
+			}
+			public void setKing(Piece king) {
+				this.king = king;
+			}
+			public Piece getRock1() {
+				return rock1;
+			}
+			public void setRock1(Piece rock1) {
+				this.rock1 = rock1;
+			}
+			public Piece getRock2() {
+				return rock2;
+			}
+			public void setRock2(Piece rock2) {
+				this.rock2 = rock2;
+			}
+			public Piece getKnight1() {
+				return knight1;
+			}
+			public void setKnight1(Piece knight1) {
+				this.knight1 = knight1;
+			}
+			public Piece getKnight2() {
+				return knight2;
+			}
+			public void setKnight2(Piece knight2) {
+				this.knight2 = knight2;
+			}
+			public Piece getBishop1() {
+				return bishop1;
+			}
+			public void setBishop1(Piece bishop1) {
+				this.bishop1 = bishop1;
+			}
+			public Piece getBishop2() {
+				return bishop2;
+			}
+			public void setBishop2(Piece bishop2) {
+				this.bishop2 = bishop2;
+			}
+		}
+		
+		class BoardState{
+			Piece selectedPiece;
+			Cell selectedCell;
+			boolean isSelected;
+			String turn;
+			BoardState(){
+				turn = "white";
+				isSelected = false;
+			}
+			public Piece getSelectedPiece() {
+				return selectedPiece;
+			}
+			public void setSelectedPiece(Piece selectedPiece) {
+				this.selectedPiece = selectedPiece;
+			}
+			public Cell getSelectedCell() {
+				return selectedCell;
+			}
+			public void setSelectedCell(Cell selectedCell) {
+				if (this.selectedCell != null)
+					this.selectedCell.setBorder(BorderFactory.createEmptyBorder());
+				this.selectedCell = selectedCell;
+				this.selectedCell.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+			}
+			public boolean isSelected() {
+				return isSelected;
+			}
+			
+			public void setTurn(String w){
+				turn = w;
+			}
+			/*public void flipTurn(){
+				if(turn=="white"){
+					turn = "black";
+				} else {
+					turn = "white";
+				}
+			}*/
+			public void setSelected(boolean isSelected) {
+				this.isSelected = isSelected;
+				if (!isSelected && this.selectedCell != null){
+					this.selectedCell.setBorder(BorderFactory.createEmptyBorder());
+				}
+			}
+			public Piece getKing(String color){
+				for(int i=0;i<8;i++){
+					for(int j=0;j<8;j++){
+						Piece p = board[i][j].getPiece();
+						if (p==null)continue;
+						if (p.getColor().equals(color) && p.getPieceName().equals("king")){
+							return p;
 						}
 					}
 				}
@@ -490,13 +664,98 @@ public class ChessWindow extends JFrame{
 			}
 			
 		}
-	}
-
-	class Player {
-		public String color;
-
-		public Player(String color) {
-			this.color = color;
+		
+		class Piece{
+			int m_x, m_y;
+			public ImageIcon m_icon;
+			public PieceType m_type;
+			public String m_pieceName;
+			public String m_color;
+			public boolean pieceMoved;
+			public Piece(String color){
+				pieceMoved = false;
+				this.m_color = color;
+			}
+			public boolean hasPieceMoved() {
+				return pieceMoved;
+			}
+			public void setPieceMoved(boolean pieceMoved) {
+				this.pieceMoved = pieceMoved;
+			}
+			public PieceType getType(){
+				return m_type;
+			}
+			public String getPieceName(){
+				return m_pieceName;
+			}
+			public int getPosX(){
+				return m_x;
+			}
+			public int getPosY(){
+				return m_y;
+			}
+			public void setPosX(int x){
+				m_x = x;
+			}
+			public void setPosY(int y){
+				m_y = y;
+			}
+			public ImageIcon getIcon(){
+				return m_icon;
+			}
+			public String getColor(){
+				return m_color;
+			}
+			public String getRevColor(){
+				if (m_color.equals("white")){
+					return "black";
+				} else {
+					return "white";
+				}
+			}
+			public boolean isMoveValid(int dx , int dy){
+				boolean answer = true;
+				/*Cell cell = board[m_x][m_y];
+				Cell dest = board[dx][dy];
+				//temporary
+				//cell.setPiece(null);
+				cell.setPiece(null);
+				Piece king = boardState.getKing(getColor());
+				//if(board[king.getPosX()][king.getPosY()].isUnderAttackBy(getRevColor())){
+				//	answer = false;
+				//}
+				cell.setPiece(this);*/
+				return answer;
+			}
+			public boolean isMoveLegal(int dx, int dy){
+				return true;
+			}
+			public void moveTo(Cell dest){
+				// make the move
+				Cell current = board[m_x][m_y];
+				current.setPiece(null);
+				dest.setPiece(this);
+				setPieceMoved(true);
+				boardState.postMoveVerification();
+				
+				System.out.println("ok here at moveTo ");
+			}
+			public void sendMove(Cell dest){
+				// message the server about the move
+				Message m= new Message(Message.MsgType.to_server_move);
+				m.setDestUsername(opponentUsername);
+				m.setSourceUsername(getUsername());
+				m.setStartX(m_x);
+				m.setStartY(m_y);
+				m.setDestX(dest.getPosX());
+				m.setDestY(dest.getPosY());
+				Sender.addMessage(m);
+				
+				//flip turn
+				flipTurn();
+				boardState.setSelected(false);
+			}
+	
 		}
 		class Pawn extends Piece{
 			public Pawn(String color){
