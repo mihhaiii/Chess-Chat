@@ -446,7 +446,7 @@ public class ChessWindow extends JFrame{
 			
 		}
 		
-		class Cell extends JButton implements ActionListener{
+		public class Cell extends JButton implements ActionListener{
 			public Cell(int x, int y, int size){
 				super();
 				m_piece = null;
@@ -573,76 +573,6 @@ public class ChessWindow extends JFrame{
 				
 			}
 		}
-		class Player{
-			public String color;
-			public Player(String color){
-				this.color = color;
-			}
-			public ArrayList<Piece> m_pieces;
-			public ArrayList<Piece> pawns;
-			public Piece queen;
-			public Piece king;
-			public Piece rock1;
-			public Piece rock2;
-			public Piece knight1;
-			public Piece knight2;
-			public Piece bishop1;
-			public Piece bishop2;
-			public ArrayList<Piece> getPieces() {
-				return m_pieces;
-			}
-			public ArrayList<Piece> getPawns() {
-				return pawns;
-			}
-			public Piece getQueen() {
-				return queen;
-			}
-			public void setQueen(Piece queen) {
-				this.queen = queen;
-			}
-			public Piece getKing() {
-				return king;
-			}
-			public void setKing(Piece king) {
-				this.king = king;
-			}
-			public Piece getRock1() {
-				return rock1;
-			}
-			public void setRock1(Piece rock1) {
-				this.rock1 = rock1;
-			}
-			public Piece getRock2() {
-				return rock2;
-			}
-			public void setRock2(Piece rock2) {
-				this.rock2 = rock2;
-			}
-			public Piece getKnight1() {
-				return knight1;
-			}
-			public void setKnight1(Piece knight1) {
-				this.knight1 = knight1;
-			}
-			public Piece getKnight2() {
-				return knight2;
-			}
-			public void setKnight2(Piece knight2) {
-				this.knight2 = knight2;
-			}
-			public Piece getBishop1() {
-				return bishop1;
-			}
-			public void setBishop1(Piece bishop1) {
-				this.bishop1 = bishop1;
-			}
-			public Piece getBishop2() {
-				return bishop2;
-			}
-			public void setBishop2(Piece bishop2) {
-				this.bishop2 = bishop2;
-			}
-		}
 		
 		class BoardState{
 			Piece selectedPiece;
@@ -722,16 +652,21 @@ public class ChessWindow extends JFrame{
 			
 		}
 		
-		class Piece{
+		public class Piece{
 			int m_x, m_y;
 			public ImageIcon m_icon;
 			public PieceType m_type;
 			public String m_pieceName;
 			public String m_color;
 			public boolean pieceMoved;
-			public Piece(String color){
+			public Piece(String color, PieceType pieceType, String pieceName){
 				pieceMoved = false;
 				this.m_color = color;
+				m_type = pieceType;
+				m_pieceName = pieceName;
+				Image img = Toolkit.getDefaultToolkit().getImage("icons/" + color + "_" + m_pieceName + ".png");
+				img = img.getScaledInstance(35, 35, java.awt.Image.SCALE_SMOOTH);
+				m_icon = new ImageIcon(img);
 			}
 			public boolean hasPieceMoved() {
 				return pieceMoved;
@@ -772,16 +707,6 @@ public class ChessWindow extends JFrame{
 			}
 			public boolean isMoveValid(int dx , int dy){
 				boolean answer = true;
-				/*Cell cell = board[m_x][m_y];
-				Cell dest = board[dx][dy];
-				//temporary
-				//cell.setPiece(null);
-				cell.setPiece(null);
-				Piece king = boardState.getKing(getColor());
-				//if(board[king.getPosX()][king.getPosY()].isUnderAttackBy(getRevColor())){
-				//	answer = false;
-				//}
-				cell.setPiece(this);*/
 				return answer;
 			}
 			public boolean isMoveLegal(int dx, int dy){
@@ -814,245 +739,91 @@ public class ChessWindow extends JFrame{
 			}
 	
 		}
-		class Pawn extends Piece{
-			public Pawn(String color){
-				super(color);
-				m_type = PieceType.pawn;
-				m_pieceName = "pawn";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+		public class Pawn extends Piece{
+			PieceMove pieceMove;
+
+			public Pawn(String color) {
+				super(color, PieceType.pawn, "pawn");
+				pieceMove = new PawnMove();
 			}
-			public boolean isMoveValid(int xx , int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
 				int x = m_x;
 				int y = m_y;
-				if(getColor().equals("white")){
-					if (x == 0) return false;
-					if (x == 6 && xx == 4 && y == yy){
-						if (board[xx][yy].getPiece() == null && board[x-1][yy].getPiece()==null)
-							return true;
-					}
-					if (y == yy && x - 1 == xx && board[xx][yy].getPiece()==null){
-						return true;
-					}
-					Piece ad;
-					if (x - 1 == xx && (y - 1 == yy || y + 1 == yy) && 
-							(ad = board[xx][yy].getPiece())!=null && ad.getColor()=="black"){
-						return true;
-					}
-					return  false;
-				}else {
-					if (x == 7) return false;
-					if (x == 1 && xx == 3 && y == yy){
-						if (board[xx][yy].getPiece() == null  && board[x+1][yy].getPiece()==null)
-							return true;
-					}
-					if (y == yy && x + 1 == xx && board[xx][yy].getPiece()==null){
-						return true;
-					}
-					Piece ad;
-					if (x + 1 == xx && (y - 1 == yy || y + 1 == yy) && 
-							(ad = board[xx][yy].getPiece())!=null && ad.getColor()=="white"){
-						return true;
-					}
-					return  false;
-				}
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
 		
-		class Rook extends Piece{
-			public Rook(String color){
-				super(color);
-				m_type = PieceType.rook;
-				m_pieceName = "rook";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+		public class Rook extends Piece{
+			PieceMove pieceMove;
+
+			public Rook(String color) {
+				super(color, PieceType.rook, "rook");
+				pieceMove = new RookMove();
 			}
-			public boolean isMoveValid(int xx , int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
 				int x = m_x;
 				int y = m_y;
-				if (x == xx){
-					for(int y1 = Math.min(y,yy)+1;y1<Math.max(y, yy);y1++){
-						if(board[x][y1].getPiece()!=null) 
-							return false;
-					}
-					if(board[xx][yy].getPiece()!=null && 
-							board[xx][yy].getPiece().getColor().equals(getColor()) )
-						return false;
-					return super.isMoveValid(xx, yy);
-				}
-				if (y == yy){
-					for(int x1 = Math.min(x,xx)+1;x1<Math.max(x, xx);x1++){
-						if(board[x1][y].getPiece()!=null) return false;
-					}
-					if(board[xx][yy].getPiece()!=null && 
-							board[xx][yy].getPiece().getColor().equals(getColor()) )
-						return false;
-					return super.isMoveValid(xx, yy);
-				}
-				return false;
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
-		class Bishop extends Piece{
-			public Bishop(String color){
-				super(color);
-				m_type = PieceType.bishop;
-				m_pieceName = "bishop";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+		public class Bishop extends Piece{
+			PieceMove pieceMove;
+
+			public Bishop(String color) {
+				super(color, PieceType.bishop, "bishop");
+				pieceMove = new BishopMove();
 			}
-			public boolean isMoveValid(int xx , int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
 				int x = m_x;
 				int y = m_y;
-				Piece p = board[xx][yy].getPiece();
-				if (p!= null && p.getColor().equals(getColor()))
-					return false;
-				if (Math.abs(x-xx) != Math.abs(y-yy))
-					return false;
-				int dx = (x > xx ? -1 : 1);
-				int dy = (y > yy ? -1 : 1);
-				x += dx;
-				y += dy;
-				while(!(x==xx && y==yy)){
-					if(board[x][y].getPiece()!=null) return false;
-					x += dx;
-					y += dy;
-				}
-				return super.isMoveValid(xx, yy);
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
-		class King extends Piece{
+		public class King extends Piece{
 			public boolean castlingDone;
-			public King(String color){
-				super(color);
-				castlingDone = false;
-				m_type = PieceType.king;
-				m_pieceName = "king";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+			PieceMove pieceMove;
+
+			public King(String color) {
+				super(color, PieceType.king, "king");
+				pieceMove = new KingMove();
 			}
-			public boolean isMoveValid(int xx, int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
 				int x = m_x;
 				int y = m_y;
-				
-				if (!pieceMoved && x == xx/*same line*/){
-					// try casling
-					Piece rock1 = board[x][0].getPiece();
-					Piece rock2 = board[x][7].getPiece();
-					if(!rock1.hasPieceMoved()){
-						if (Math.abs(y-yy) == 2 && yy < y){
-							boolean castlePossible1 = true;
-							for(int y1=0;y1<=y;y1++)
-								if (true/*board[x][y1].isUnderAttackBy(getRevColor())*/)
-									castlePossible1 = false;
-							if (castlePossible1) {
-								//rock1.moveTo(board[x][yy+1]);
-								return true;
-							}
-						}
-					}
-					if(!rock2.hasPieceMoved()){
-						if (Math.abs(y-yy) == 2 && y < yy){
-							boolean castlePossible1 = true;
-							for(int y1=y;y1<=yy;y1++)
-								if (true/*board[x][y1].isUnderAttackBy(getRevColor())*/)
-									castlePossible1 = false;
-							if (castlePossible1) {
-								//rock2.moveTo(board[x][yy-1]);
-								return true;
-							}
-						}
-					}
-				}
-				if(Math.abs(x - xx) <= 1 && Math.abs(y - yy) <= 1){
-					if (!(board[xx][yy].getPiece()!=null && board[xx][yy].getPiece().getColor().equals(getColor())))
-								return true;
-				}
-				return false;
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
 		
-		class Knight extends Piece{
-			public Knight(String color){
-				super(color);
-				m_type = PieceType.knight;
-				m_pieceName = "knight";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+		public class Knight extends Piece{
+			PieceMove pieceMove;
+
+			public Knight(String color) {
+				super(color, PieceType.knight, "knight");
+				pieceMove = new KnightMove();
 			}
-			public boolean isMoveValid(int xx, int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
 				int x = m_x;
 				int y = m_y;
-				Piece p = board[xx][yy].getPiece();
-				if (p != null && p.getColor().equals(getColor())){
-					return false;
-				}
-				int difx = Math.abs(x - xx);
-				int dify = Math.abs(y - yy);
-				if ((difx == 1 && dify == 2) || (difx == 2 && dify == 1))
-					return super.isMoveValid(xx, yy);
-				return false;
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
-		class Queen extends Piece{
-			public Queen(String color){
-				super(color);
-				m_type = PieceType.queen;
-				m_pieceName = "queen";
-				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
-				m_icon = new ImageIcon(img);
+		public class Queen extends Piece{
+			PieceMove pieceMove;
+
+			public Queen(String color) {
+				super(color, PieceType.queen, "queen");
+				pieceMove = new QueenMove();
 			}
-			public boolean isMoveValid(int xx , int yy){
-				boolean answer = isMoveLegal(xx, yy);
-				if (answer == false)
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
+
 			public boolean isMoveLegal(int xx, int yy){
-				Rook rook = new Rook(getColor());
-				rook.setPosX(m_x);
-				rook.setPosY(m_y);
-				Bishop bishop = new Bishop(getColor());
-				bishop.setPosX(m_x);
-				bishop.setPosY(m_y);
-				boolean answer =  rook.isMoveLegal(xx,yy) || bishop.isMoveLegal(xx, yy);
-				board[m_x][m_y].setPiece(this);
-				return answer;
+				int x = m_x;
+				int y = m_y;
+				return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 			}
 		}
 		
