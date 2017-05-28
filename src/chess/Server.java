@@ -85,7 +85,7 @@ class Client extends Thread
 					if (Server.isPlaying(dest)){
 						// player already playing
 						m.setType(Message.MsgType.to_client_user_already_playing);
-						Server.sendMessage(dest, m);
+						Server.sendMessage(m.getSourceUsername(), m);
 					} else {
 						// player free , ask him to play
 						m.setType(Message.MsgType.to_client_send_invitation);
@@ -99,7 +99,7 @@ class Client extends Thread
 				case to_server_confirm_invitation:
 					m.setType(Message.MsgType.to_client_send_response_accepted_to_invitation);
 					Server.sendMessage(m.getDestUsername(), m);
-					Server.addGame(m.getSourceUsername(),m.getDestUsername() );
+					Server.addGame(m.getDestUsername() ,m.getSourceUsername());
 					break;
 				case to_server_decline_invitation:
 					m.setType(Message.MsgType.to_client_send_response_declined_to_invitation);
@@ -110,6 +110,9 @@ class Client extends Thread
 				case to_server_decline_draw:
 					break;
 				case to_server_move:
+					if(!Server.isPlaying(this)) continue;
+					m.setType(Message.MsgType.to_client_move);
+					Server.sendMessage(Server.isPlayingWith(getUsername()), m);
 					break;
 				default:
 					break;

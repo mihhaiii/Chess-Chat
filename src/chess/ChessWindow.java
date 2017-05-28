@@ -32,17 +32,15 @@ class Sender extends Thread{
 	public void run(){
 		try{
 			Scanner sc = new Scanner(System.in);
-			while(ChessWindow.isConnected()){				
-				//System.out.println("but i.'ve been here");
-				// send a message
+			while(ChessWindow.isConnected()){	
+				System.out.println(ChessWindow.getMyColor() + "  " + ChessWindow.getTurn());
+				
 				synchronized(mq){
 					synchronized(out){
 						if (!mq.isEmpty()){
 							
 							Message m = mq.get(0);
-							if (m == null){
-								System.out.println("Am fost null in alta parte");
-							}
+							
 							System.out.println("client sends message: " + m);
 							mq.remove(0);
 							out.writeObject(m);
@@ -74,6 +72,7 @@ class Receiver extends Thread{
 	public void run(){
 		try{
 			// asteapta mesaje de la server
+			
 			while(ChessWindow.isConnected()){
 					Message m = (Message)in.readObject();
 					System.out.println("client receives message: " + m);
@@ -89,15 +88,12 @@ class Receiver extends Thread{
 							if (response == JOptionPane.YES_OPTION){
 								m.setType(Message.MsgType.to_server_confirm_invitation);
 								Sender.addMessage(m);
-								if (m == null){
-									System.out.println("locul 1");
-								}
+								ChessWindow.setTurn("white");
+								ChessWindow.setMyColor("black");
 							} else {
 								m.setType(Message.MsgType.to_server_decline_invitation);
 								Sender.addMessage(m);
-								if (m == null){
-									System.out.println("locul 2");
-								}
+								
 							}
 							break;
 						}
@@ -109,6 +105,8 @@ class Receiver extends Thread{
 						break;
 					case to_client_send_response_accepted_to_invitation:
 					{
+						ChessWindow.setTurn("white");
+						ChessWindow.setMyColor("white");
 						JOptionPane.showMessageDialog(new JFrame(), "Invitation accepted", "Response", JOptionPane.INFORMATION_MESSAGE);	
 					}
 					break;
@@ -127,6 +125,10 @@ class Receiver extends Thread{
 						JOptionPane.showMessageDialog(new JFrame(), "User currently in a game", "Invitation", JOptionPane.ERROR_MESSAGE);
 						break;
 					case to_client_move:
+						System.out.println(m.getStartX()+" "+m.getStartY());
+						System.out.println(ChessWindow.board[m.getStartX()][m.getStartY()].getPiece());
+						ChessWindow.board[m.getStartX()][m.getStartY()].getPiece().moveTo(ChessWindow.board[m.getDestX()][m.getDestY()]);
+						ChessWindow.flipTurn();
 						break;
 					default:
 							break;
@@ -150,6 +152,9 @@ public class ChessWindow extends JFrame{
 		public static void setConnected(boolean toSet){
 			isConnected = toSet;
 		}
+		public static boolean isPlaying;	
+		public static String turn;
+		public static String myColor;
 		public static String username;
 		public static String opponentUsername; // null means not playing at the moment
 		public static String getUsername() {
@@ -164,6 +169,32 @@ public class ChessWindow extends JFrame{
 		public static void setOpponentUsername(String opponentUser) {
 			opponentUsername = opponentUser;
 		}
+		public static boolean isPlaying() {
+			return isPlaying;
+		}
+		public static void setPlaying(boolean isPlaying) {
+			ChessWindow.isPlaying = isPlaying;
+		}
+		public static String getMyColor() {
+			return myColor;
+		}
+		public static void setMyColor(String myColor) {
+			ChessWindow.myColor = myColor;
+		}
+		public static String getTurn() {
+			return turn;
+		}
+		public static void setTurn(String myColor) {
+			ChessWindow.turn = myColor;
+		}
+		public static void flipTurn(){
+			if (turn == "white"){
+				turn = "black";
+			}else {
+				turn = "white";
+			}
+		}
+		
 		
 		public static void promptAndSendUsername(){
 			// prompt for a username
@@ -205,8 +236,8 @@ public class ChessWindow extends JFrame{
 		public static JButton inviteButton, drawButton, resignButton;
 		public static JComboBox players;
 
-		Cell[][] board;
-		BoardState boardState = new BoardState();
+		public static Cell[][] board;
+		 BoardState boardState = new BoardState();
 		
 		
 		public static synchronized void showMessage(String message){
@@ -438,6 +469,10 @@ public class ChessWindow extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if (!getTurn().equals(getMyColor())){
+					// not my turn, ignore event
+					return;
+				}
 				Cell cell = (Cell) e.getSource();
 				if (cell != this) return;
 				if (boardState.isSelected()){
@@ -447,14 +482,14 @@ public class ChessWindow extends JFrame{
 					if (source.isMoveValid(getPosX(),getPosY())){
 						
 						Piece piece = source.getPiece();
+						piece.sendMove(dest);
 						piece.moveTo(dest);
-						boardState.flipTurn();
 						boardState.setSelected(false);
 					}else {
 		
-						Piece destPiece = dest.getPiece();
+						Piece destPiece = this.getPiece();
 						if (destPiece != null){
-							if (destPiece.getColor().equals(boardState.getTurn())){
+							if (destPiece.getColor().equals(getTurn())){
 								boardState.setSelected(true);
 								boardState.setSelectedCell(dest);
 								boardState.setSelectedPiece(destPiece);
@@ -466,15 +501,17 @@ public class ChessWindow extends JFrame{
 						}
 					}
 				} else {
-					// cell is the start point
 					if (isEmpty())
-						{
-							return;
-						}
-					if (!getPiece().getColor().equals(boardState.getTurn())){
+					{
 						return;
 					}
-					System.out.println("been here " + boardState.getTurn() +  " " + getPiece().getColor());
+					// if the selected piece is not of my color, move on
+					if (!getMyColor().equals(this.getPiece().getColor())){
+						return;
+					}
+					
+					
+					System.out.println("been here " + getTurn() +  " " + getPiece().getColor());
 					boardState.setSelected(true);
 					boardState.setSelectedCell(this);
 					boardState.setSelectedPiece(getPiece());
@@ -580,16 +617,17 @@ public class ChessWindow extends JFrame{
 			public boolean isSelected() {
 				return isSelected;
 			}
-			public String getTurn(){
-				return turn;
+			
+			public void setTurn(String w){
+				turn = w;
 			}
-			public void flipTurn(){
+			/*public void flipTurn(){
 				if(turn=="white"){
 					turn = "black";
 				} else {
 					turn = "white";
 				}
-			}
+			}*/
 			public void setSelected(boolean isSelected) {
 				this.isSelected = isSelected;
 				if (!isSelected && this.selectedCell != null){
@@ -696,13 +734,30 @@ public class ChessWindow extends JFrame{
 				return true;
 			}
 			public void moveTo(Cell dest){
+				// make the move
 				Cell current = board[m_x][m_y];
 				current.setPiece(null);
 				dest.setPiece(this);
 				setPieceMoved(true);
 				boardState.postMoveVerification();
+				
+				System.out.println("ok here at moveTo ");
 			}
-			
+			public void sendMove(Cell dest){
+				// message the server about the move
+				Message m= new Message(Message.MsgType.to_server_move);
+				m.setDestUsername(opponentUsername);
+				m.setSourceUsername(getUsername());
+				m.setStartX(m_x);
+				m.setStartY(m_y);
+				m.setDestX(dest.getPosX());
+				m.setDestY(dest.getPosY());
+				Sender.addMessage(m);
+				
+				//flip turn
+				flipTurn();
+				boardState.setSelected(false);
+			}
 	
 		}
 		class Pawn extends Piece{
