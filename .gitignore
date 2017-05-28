@@ -1,0 +1,3 @@
+bin/chess/*.class
+bin/test/*.class
+*.class
