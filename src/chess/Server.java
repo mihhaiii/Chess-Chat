@@ -55,26 +55,61 @@ class Client extends Thread
 	public void run() {
 		try{
 			while(true){
-				System.out.println("here");
-				// get messages from client and send messages accordingly to 
-				// other clients and to the sender as well
 				Message m = (Message) in.readObject();
-				
+				if (m == null) continue;
+				System.out.println("server receives message: " + m);
+
 				switch(m.getType()){
-				case send_invitation:
+				case to_server_send_message:
+					if (!Server.isPlaying(this))
+						continue;
+					String destUser = Server.isPlayingWith(getUsername());
+					m.setDestUsername(destUser);
+					m.setType(Message.MsgType.to_client_send_message);
+					m.setMessageText(getUsername() + ": " + m.getMessageText());
+					Server.sendChat(getUsername(), destUser, m);
 					break;
-				case send_message:
-					m.setStr(m.getStr().toUpperCase());
-					out.writeObject(m);
+				case to_server_send_username:
+					if(Server.existsClient(m.getMessageText())){
+						m.setType(Message.MsgType.to_client_send_username_taken);
+						Server.sendMessage(this, m);
+					} else {
+						setUsername(m.getMessageText());
+						Server.addClient(this);
+					}
 					break;
-				case send_username:
-					setUsername(m.getStr());
+				case to_server_invite_player:
+					String dest = m.getDestUsername();
+					if (!Server.existsClient(dest))
+						continue;
+					if (Server.isPlaying(dest)){
+						// player already playing
+						m.setType(Message.MsgType.to_client_user_already_playing);
+						Server.sendMessage(dest, m);
+					} else {
+						// player free , ask him to play
+						m.setType(Message.MsgType.to_client_send_invitation);
+						Server.sendMessage(dest, m);
+					}
 					break;
-				case propose_draw:
+				case to_server_resign:
 					break;
-				case resign:
+				case to_server_propose_draw:
 					break;
-				case send_move:
+				case to_server_confirm_invitation:
+					m.setType(Message.MsgType.to_client_send_response_accepted_to_invitation);
+					Server.sendMessage(m.getDestUsername(), m);
+					Server.addGame(m.getSourceUsername(),m.getDestUsername() );
+					break;
+				case to_server_decline_invitation:
+					m.setType(Message.MsgType.to_client_send_response_declined_to_invitation);
+					Server.sendMessage(m.getDestUsername(), m);
+					break;
+				case to_server_confirm_draw:
+					break;
+				case to_server_decline_draw:
+					break;
+				case to_server_move:
 					break;
 				default:
 					break;
@@ -86,6 +121,37 @@ class Client extends Thread
 		
 	}
 }
+class Game {
+	String player1, player2;
+	public Game(String player1, String player2){
+		this.player1 = player1;
+		this.player2 = player2;
+	}
+	public String getPlayer1() {
+		return player1;
+	}
+
+	public void setPlayer1(String player1) {
+		this.player1 = player1;
+	}
+
+	public String getPlayer2() {
+		return player2;
+	}
+
+	public void setPlayer2(String player2) {
+		this.player2 = player2;
+	}
+	
+	public boolean equals(Object other){
+		if (other == null) return false;
+	    if (other == this) return true;
+	    if (!(other instanceof Game))return false;
+	    other = (Game)other;
+	    return this.player1.equals(((Game) other).getPlayer1()) &&
+	    		this.player2.equals(((Game) other).getPlayer2());
+	}
+}
 
 public class Server extends JFrame{
 
@@ -93,6 +159,7 @@ public class Server extends JFrame{
 	
 		static public ArrayList<Client> clients = new ArrayList<>();
 		static public HashMap<String, Client> usernames = new HashMap<>();
+		static public HashSet<Game> games = new HashSet<>();
 		
 		public static void main(String[] args) throws Exception{
 			
@@ -101,7 +168,7 @@ public class Server extends JFrame{
 			while(true){
 				Socket s = ss.accept();
 				Client c = new Client(s);
-				addClient(c);
+				//addClient(c);
 				c.start();
 			}
 						
@@ -120,5 +187,43 @@ public class Server extends JFrame{
 		public static synchronized boolean existsClient(Client c){
 			return usernames.containsValue(c);
 		}
-	
+		public static synchronized boolean addGame(String p1, String p2){
+			return games.add(new Game(p1,p2));
+		}
+		public static synchronized boolean isPlaying(String p){
+			for(Game g : games){
+				if (g.getPlayer1().equals(p) || g.getPlayer2().equals(p))
+					return  true;
+			}
+			return false;
+		}
+		
+		public static synchronized boolean isPlaying(Client c){
+			return isPlaying(c.getUsername());
+		}
+		public static synchronized String isPlayingWith(String p){
+			for(Game g : games){
+				if (g.getPlayer1().equals(p) || g.getPlayer2().equals(p))
+					return  g.getPlayer1().equals(p) ? g.getPlayer2() : g.getPlayer1();
+			}
+			return null;
+		}
+		/*public static synchronized void sendInvitationFromTo(String source, String dest) throws Exception{
+			Client c = usernames.get(dest);
+			Message m  = new Message(source, Message.MsgType.send_invitation);
+			c.getOut().writeObject(m);
+		}*/
+		public static synchronized void sendChat(String source, String dest, Message m) throws Exception{
+			Client sourceC = usernames.get(source);
+			Client destC = usernames.get(dest);
+			sourceC.getOut().writeObject(m);
+			destC.getOut().writeObject(m);
+		}
+		public static synchronized void sendMessage(String source, Message m) throws Exception{
+			Client sourceC = usernames.get(source);
+			sourceC.getOut().writeObject(m);
+		}
+		public static synchronized void sendMessage(Client source, Message m) throws Exception{
+			source.getOut().writeObject(m);
+		}
 }

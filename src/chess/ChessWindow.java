@@ -12,8 +12,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -25,22 +27,30 @@ class Sender extends Thread{
 	public Sender(ObjectOutputStream _out){out=_out;}
 	
 	
-	public static ArrayList<Message> mq = new ArrayList<>(); // message queue
+	//public static ArrayList<Message> mq = new ArrayList<>(); // message queue
+	public  static List<Message> mq = Collections.synchronizedList(new ArrayList<Message>());
 	public void run(){
 		try{
 			Scanner sc = new Scanner(System.in);
 			while(ChessWindow.isConnected()){				
 				//System.out.println("but i.'ve been here");
 				// send a message
-				synchronized(this){
-					if (!mq.isEmpty()){
-						System.out.println("been at sending message");
-						Message m = mq.get(0);
-						mq.remove(0);
-						out.writeObject(m);
-						System.out.println("Sending message");
+				synchronized(mq){
+					synchronized(out){
+						if (!mq.isEmpty()){
+							
+							Message m = mq.get(0);
+							if (m == null){
+								System.out.println("Am fost null in alta parte");
+							}
+							System.out.println("client sends message: " + m);
+							mq.remove(0);
+							out.writeObject(m);
+						
+						}
 					}
-				}		
+				}
+						
 			}
 		}
 		catch(Exception e){
@@ -50,7 +60,9 @@ class Sender extends Thread{
 	}
 	public static synchronized void addMessage(Message m){
 		mq.add(m);
-		System.out.println("adding message to queue");
+		if (m == null){
+			System.out.println("Am fost null aici");
+		}
 	}
 }
 class Receiver extends Thread{
@@ -61,11 +73,64 @@ class Receiver extends Thread{
 	public Receiver(ObjectInputStream _in){in=_in;}
 	public void run(){
 		try{
-			// asteapta mesaje de la server si la afiseaza in consola
+			// asteapta mesaje de la server
 			while(ChessWindow.isConnected()){
 					Message m = (Message)in.readObject();
-					System.out.println("receiving message");
-					ChessWindow.textArea1.append(m.s+"\n");
+					System.out.println("client receives message: " + m);
+
+					if (m==null) continue;
+					String fromWhom = m.getSourceUsername();
+					String user = m.getDestUsername();
+					switch(m.getType()){  
+					case to_client_send_invitation:
+						{
+							int response = JOptionPane.showConfirmDialog(new JFrame(), "User " + fromWhom + " wants to play a game with you", "Invitation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+							m.flipUsers();
+							if (response == JOptionPane.YES_OPTION){
+								m.setType(Message.MsgType.to_server_confirm_invitation);
+								Sender.addMessage(m);
+								if (m == null){
+									System.out.println("locul 1");
+								}
+							} else {
+								m.setType(Message.MsgType.to_server_decline_invitation);
+								Sender.addMessage(m);
+								if (m == null){
+									System.out.println("locul 2");
+								}
+							}
+							break;
+						}
+						
+					case to_client_send_response_declined_to_invitation:
+						{	
+							JOptionPane.showMessageDialog(new JFrame(), "Invitation declined", "Response", JOptionPane.INFORMATION_MESSAGE);
+						}
+						break;
+					case to_client_send_response_accepted_to_invitation:
+					{
+						JOptionPane.showMessageDialog(new JFrame(), "Invitation accepted", "Response", JOptionPane.INFORMATION_MESSAGE);	
+					}
+					break;
+					case to_client_send_message:
+						ChessWindow.showMessage(m.getMessageText());
+						break;
+					case to_client_send_username_taken:
+						JOptionPane.showMessageDialog(new JFrame(), "Username already taken", "Sign in", JOptionPane.ERROR_MESSAGE);
+						ChessWindow.promptAndSendUsername();
+						break;
+					case to_client_propose_draw:
+						break;
+					case to_client_resign:
+						break;
+					case to_client_user_already_playing:
+						JOptionPane.showMessageDialog(new JFrame(), "User currently in a game", "Invitation", JOptionPane.ERROR_MESSAGE);
+						break;
+					case to_client_move:
+						break;
+					default:
+							break;
+					}
 			}
 		}
 		catch(Exception e){
@@ -99,33 +164,36 @@ public class ChessWindow extends JFrame{
 		public static void setOpponentUsername(String opponentUser) {
 			opponentUsername = opponentUser;
 		}
-		public static Receiver rec;
-		public static Sender sen;
-		public static void main(String[] args) throws Exception{
-			new ChessWindow();
-			System.out.println("chess window created");
-			
-			Socket socket = new Socket("localhost", 9090);
+		
+		public static void promptAndSendUsername(){
 			// prompt for a username
 			setUsername(JOptionPane.showInputDialog(new JFrame(), "Enter Username:", "Dialog",
 			        JOptionPane.OK_OPTION) );
 			setOpponentUsername(null);
+			Message m = new Message(Message.MsgType.to_server_send_username);
+			m.setMessageText(getUsername());
+			Sender.addMessage(m);
+			if (m == null){
+				System.out.println("locul 3");
+			}
+		}
+		
+		public static Receiver rec;
+		public static Sender sen;
+		public static void main(String[] args) throws Exception{
+			new ChessWindow();
+			
+			Socket socket = new Socket("localhost", 9090);
+			promptAndSendUsername();
 			
 			setConnected(true);
-			System.out.println("connnectd to server");
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			System.out.println("got streams");
 			
 			rec = new Receiver(in);
 			System.out.println("receive started");
 			sen = new Sender(out);
 			System.out.println("sender started");
-			
-			Message m = new Message(getUsername(),Message.MsgType.send_username);
-			sen.addMessage(m);
-			
-			
 			
 			rec.start();
 			sen.start();
@@ -139,6 +207,12 @@ public class ChessWindow extends JFrame{
 
 		Cell[][] board;
 		BoardState boardState = new BoardState();
+		
+		
+		public static synchronized void showMessage(String message){
+			textArea1.append(message+"\n");
+		}
+		
 		public ChessWindow() throws Exception{
 			
 			this.setSize(800,600);
@@ -162,6 +236,8 @@ public class ChessWindow extends JFrame{
 			textField1.requestFocus();
 			userTextField = new JTextField(20);
 			inviteButton = new JButton("Invite");
+			ListenForButton lForButton  = new ListenForButton();
+			inviteButton.addActionListener(lForButton);
 			drawButton = new JButton("Propose draw");
 			resignButton = new JButton("Resign");
 			String[] pl = { "mihai" , "ana", "ion" , "andrei", "vasea", "vasile"};
@@ -235,9 +311,32 @@ public class ChessWindow extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				sen.addMessage(new Message(textField1.getText()));
-				System.out.println("adding message to sender");
+				Message m = new Message(Message.MsgType.to_server_send_message);
+				m.setSourceUsername(getUsername());
+				m.setMessageText(textField1.getText());
+				Sender.addMessage(m);
+				if (m == null){
+					System.out.println("locul 4");
+				}
 				textField1.setText(null);
+			}
+
+			
+			
+		}
+		private class ListenForButton implements ActionListener{
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("locul asta");
+				Message m = new Message(Message.MsgType.to_server_invite_player);
+				m.setSourceUsername(getUsername());
+				m.setDestUsername((String)players.getSelectedItem());
+				if (m == null){
+					System.out.println("locul 5");
+				}
+				Sender.addMessage(m);
+				
 			}
 
 			
