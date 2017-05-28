@@ -76,6 +76,8 @@ class Client extends Thread
 					} else {
 						setUsername(m.getMessageText());
 						Server.addClient(this);
+						m.setType(Message.MsgType.to_client_new_user);
+						Server.broadCast(this,m);
 					}
 					break;
 				case to_server_invite_player:
@@ -228,5 +230,19 @@ public class Server extends JFrame{
 		}
 		public static synchronized void sendMessage(Client source, Message m) throws Exception{
 			source.getOut().writeObject(m);
+		}
+		public static synchronized void broadCast(Client source,Message m) throws Exception{
+			for(Client c: clients){
+				c.getOut().writeObject(m);
+				System.out.println(m.getMessageText());
+			}
+			System.out.println();
+			for(Client c : clients){
+				if(c == source) continue;
+				Message msg  = new Message(Message.MsgType.to_client_new_user);
+				msg.setMessageText(c.getUsername());
+				
+				source.getOut().writeObject(msg);
+			}
 		}
 }

@@ -33,7 +33,7 @@ class Sender extends Thread{
 		try{
 			Scanner sc = new Scanner(System.in);
 			while(ChessWindow.isConnected()){	
-				System.out.println(ChessWindow.getMyColor() + "  " + ChessWindow.getTurn());
+			//	System.out.println(ChessWindow.getMyColor() + "  " + ChessWindow.getTurn());
 				
 				synchronized(mq){
 					synchronized(out){
@@ -125,10 +125,14 @@ class Receiver extends Thread{
 						JOptionPane.showMessageDialog(new JFrame(), "User currently in a game", "Invitation", JOptionPane.ERROR_MESSAGE);
 						break;
 					case to_client_move:
-						System.out.println(m.getStartX()+" "+m.getStartY());
-						System.out.println(ChessWindow.board[m.getStartX()][m.getStartY()].getPiece());
+						//System.out.println(m.getStartX()+" "+m.getStartY());
+						//System.out.println(ChessWindow.board[m.getStartX()][m.getStartY()].getPiece());
 						ChessWindow.board[m.getStartX()][m.getStartY()].getPiece().moveTo(ChessWindow.board[m.getDestX()][m.getDestY()]);
 						ChessWindow.flipTurn();
+						break;
+					case to_client_new_user:
+						System.out.println(m.getMessageText());
+						ChessWindow.players.addItem(m.getMessageText());
 						break;
 					default:
 							break;
@@ -246,7 +250,7 @@ public class ChessWindow extends JFrame{
 		
 		public ChessWindow() throws Exception{
 			
-			this.setSize(800,600);
+			this.setSize(500,300);
 			this.setLocationRelativeTo(null);	
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			this.setTitle("Chess engine");
@@ -257,22 +261,22 @@ public class ChessWindow extends JFrame{
 			
 			JPanel gridPanel = new JPanel(new GridLayout(8,8));
 			board = new Cell[8][8];
-			
+		
 			
 			JPanel buttonPanel = new JPanel();
 			JPanel selectPanel = new JPanel(new BorderLayout());
 
-			textArea1  = new JTextArea(20,20);
-			textField1 = new JTextField(20);
+			textArea1  = new JTextArea(10,10);
+			textField1 = new JTextField(10);
 			textField1.requestFocus();
-			userTextField = new JTextField(20);
+			userTextField = new JTextField(10);
 			inviteButton = new JButton("Invite");
 			ListenForButton lForButton  = new ListenForButton();
 			inviteButton.addActionListener(lForButton);
 			drawButton = new JButton("Propose draw");
 			resignButton = new JButton("Resign");
-			String[] pl = { "mihai" , "ana", "ion" , "andrei", "vasea", "vasile"};
-			players = new JComboBox(pl);
+			//String[] pl = new String[];// { "mihai" , "ana", "ion" , "andrei", "vasea", "vasile"};
+			players = new JComboBox();
 			selectLabel = new JLabel("Select player:");
 			chatLabel = new JLabel("Chat");
 			
@@ -294,7 +298,7 @@ public class ChessWindow extends JFrame{
 			// fill board
 			for(int i=0;i<8;i++){
 				for(int j=0;j<8;j++){
-					board[i][j] = new Cell(i,j, 40);
+					board[i][j] = new Cell(i,j, 20);
 					if (i == 1 || i == 6){
 						String color = (i == 1 ? "black" : "white");
 						board[i][j].setPiece(new Pawn(color));
@@ -359,11 +363,11 @@ public class ChessWindow extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("locul asta");
 				Message m = new Message(Message.MsgType.to_server_invite_player);
 				m.setSourceUsername(getUsername());
 				m.setDestUsername((String)players.getSelectedItem());
-				Sender.addMessage(m);
+				if (!m.getDestUsername().equals(getUsername()))
+						Sender.addMessage(m);
 				
 			}
 
@@ -508,7 +512,7 @@ public class ChessWindow extends JFrame{
 					}
 					
 					
-					System.out.println("been here " + getTurn() +  " " + getPiece().getColor());
+					//System.out.println("been here " + getTurn() +  " " + getPiece().getColor());
 					boardState.setSelected(true);
 					boardState.setSelectedCell(this);
 					boardState.setSelectedPiece(getPiece());
@@ -763,7 +767,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.pawn;
 				m_pieceName = "pawn";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -815,7 +819,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.rook;
 				m_pieceName = "rook";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -854,7 +858,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.bishop;
 				m_pieceName = "bishop";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -891,7 +895,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.king;
 				m_pieceName = "king";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx, int yy){
@@ -947,7 +951,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.knight;
 				m_pieceName = "knight";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx, int yy){
@@ -976,7 +980,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.queen;
 				m_pieceName = "queen";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 35, 35,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){

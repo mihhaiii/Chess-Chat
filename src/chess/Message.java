@@ -23,7 +23,8 @@ public class Message implements Serializable{
 				to_client_propose_draw,
 				to_client_resign,
 				to_client_user_already_playing,
-				to_client_move
+				to_client_move,
+				to_client_new_user
 			}
 			private static final HashMap<MsgType, String> map;
 			static
