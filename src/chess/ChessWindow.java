@@ -369,7 +369,7 @@ public class ChessWindow extends JFrame {
 				Cell source = boardState.getSelectedCell();
 				Cell dest = this;
 				if (source.isMoveValid(getPosX(), getPosY())) {
-
+					//System.out.println("x = " + dest.m_x + " y = " + dest.m_y + "\n");
 					Piece piece = source.getPiece();
 					piece.moveTo(dest);
 					boardState.flipTurn();
@@ -652,7 +652,7 @@ public class ChessWindow extends JFrame {
 			if (x == xx) {
 				for (int y1 = Math.min(y, yy) + 1; y1 < Math.max(y, yy); y1++) {
 					if (board[x][y1].getPiece() != null)
-						return super.isMoveValid(xx, yy);
+						return false;
 				}
 				if (board[xx][yy].getPiece() != null && board[xx][yy].getPiece().getColor().equals(getColor()))
 					return false;
