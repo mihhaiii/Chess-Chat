@@ -276,7 +276,7 @@ public class ChessWindow extends JFrame{
 		
 		public ChessWindow() throws Exception{
 			
-			this.setSize(500,300);
+			this.setSize(1000,600);
 			this.setLocationRelativeTo(null);	
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			this.setTitle("Chess engine");
@@ -292,8 +292,8 @@ public class ChessWindow extends JFrame{
 			JPanel buttonPanel = new JPanel();
 			JPanel selectPanel = new JPanel(new BorderLayout());
 
-			textArea1  = new JTextArea(10,10);
-			textField1 = new JTextField(10);
+			textArea1  = new JTextArea(20,20);
+			textField1 = new JTextField(20);
 			textField1.requestFocus();
 			userTextField = new JTextField(10);
 			inviteButton = new JButton("Invite");
@@ -328,7 +328,7 @@ public class ChessWindow extends JFrame{
 			// fill board
 			for(int i=0;i<8;i++){
 				for(int j=0;j<8;j++){
-					board[i][j] = new Cell(i,j, 20);
+					board[i][j] = new Cell(i,j, 40);
 					if (i == 1 || i == 6){
 						String color = (i == 1 ? "black" : "white");
 						board[i][j].setPiece(new Pawn(color));
@@ -361,11 +361,11 @@ public class ChessWindow extends JFrame{
 				}
 			}
 		
-			addComp(thePanel, scrollbar1, 0, 0, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.NONE);
-			addComp(thePanel, textField1, 0, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.NONE);
-			addComp(thePanel, selectPanel, 2, 0, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.NONE);
-			addComp(thePanel,	buttonPanel, 1, 1, 1, 1, GridBagConstraints.NORTH, GridBagConstraints.NONE);
-			addComp(thePanel, gridPanel, 1, 0, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.NONE);
+			addComp(thePanel, scrollbar1, 0, 0, 2, 2, GridBagConstraints.CENTER, GridBagConstraints.NONE);
+			addComp(thePanel, textField1, 0, 2, 2, 2, GridBagConstraints.CENTER, GridBagConstraints.NONE);
+			addComp(thePanel, selectPanel, 4, 0, 2, 2, GridBagConstraints.CENTER, GridBagConstraints.NONE);
+			addComp(thePanel,	buttonPanel, 2, 2, 2, 2, GridBagConstraints.NORTH, GridBagConstraints.NONE);
+			addComp(thePanel, gridPanel, 2, 0, 2, 2, GridBagConstraints.CENTER, GridBagConstraints.NONE);
 						
 			this.add(thePanel);
 			this.setVisible(true);
@@ -438,7 +438,7 @@ public class ChessWindow extends JFrame{
 			gridConstraints.gridheight = compHeight;
 			gridConstraints.weightx = 1;
 			gridConstraints.weighty = 1;
-			gridConstraints.insets = new Insets(5,5,5,5);
+			gridConstraints.insets = new Insets(10,10,10,10);
 			gridConstraints.anchor = place;
 			gridConstraints.fill = stretch;
 			
@@ -820,7 +820,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.pawn;
 				m_pieceName = "pawn";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -872,7 +872,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.rook;
 				m_pieceName = "rook";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -886,7 +886,8 @@ public class ChessWindow extends JFrame{
 				int y = m_y;
 				if (x == xx){
 					for(int y1 = Math.min(y,yy)+1;y1<Math.max(y, yy);y1++){
-						if(board[x][y1].getPiece()!=null) return super.isMoveValid(xx, yy);
+						if(board[x][y1].getPiece()!=null) 
+							return false;
 					}
 					if(board[xx][yy].getPiece()!=null && 
 							board[xx][yy].getPiece().getColor().equals(getColor()) )
@@ -911,7 +912,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.bishop;
 				m_pieceName = "bishop";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
@@ -948,7 +949,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.king;
 				m_pieceName = "king";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx, int yy){
@@ -1004,7 +1005,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.knight;
 				m_pieceName = "knight";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx, int yy){
@@ -1033,7 +1034,7 @@ public class ChessWindow extends JFrame{
 				m_type = PieceType.queen;
 				m_pieceName = "queen";
 				Image img = Toolkit.getDefaultToolkit().getImage("icons/"+color+"_"+m_pieceName+".png");
-				img = img.getScaledInstance( 16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+				img = img.getScaledInstance( 32, 32,  java.awt.Image.SCALE_SMOOTH ) ;
 				m_icon = new ImageIcon(img);
 			}
 			public boolean isMoveValid(int xx , int yy){
