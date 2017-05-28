@@ -151,7 +151,7 @@ public class ChessWindow extends JFrame {
 	public static JButton inviteButton, drawButton, resignButton;
 	public static JComboBox players;
 
-	Cell[][] board;
+	public Cell[][] board;
 	BoardState boardState = new BoardState();
 
 	public ChessWindow() throws Exception {
@@ -273,7 +273,7 @@ public class ChessWindow extends JFrame {
 		thePanel.add(comp, gridConstraints);
 	}
 
-	class Cell extends JButton implements ActionListener {
+	public class Cell extends JButton implements ActionListener {
 		public Cell(int x, int y, int size) {
 			super();
 			m_piece = null;
@@ -491,7 +491,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Piece {
+	public class Piece {
 		int m_x, m_y;
 		public ImageIcon m_icon;
 		public PieceType m_type;
@@ -583,7 +583,7 @@ public class ChessWindow extends JFrame {
 
 	}
 
-	class Pawn extends Piece {
+	public class Pawn extends Piece {
 		public Pawn(String color) {
 			super(color, PieceType.pawn, "pawn");
 		}
@@ -634,7 +634,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Rook extends Piece {
+	public class Rook extends Piece {
 		public Rook(String color) {
 			super(color, PieceType.rook, "rook");
 		}
@@ -671,7 +671,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Bishop extends Piece {
+	public class Bishop extends Piece {
 		public Bishop(String color) {
 			super(color, PieceType.bishop, "bishop");
 		}
@@ -705,7 +705,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class King extends Piece {
+	public class King extends Piece {
 		public boolean castlingDone;
 
 		public King(String color) {
@@ -766,7 +766,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Knight extends Piece {
+	public class Knight extends Piece {
 		public Knight(String color) {
 			super(color, PieceType.knight, "knight");
 		}
@@ -793,7 +793,7 @@ public class ChessWindow extends JFrame {
 		}
 	}
 
-	class Queen extends Piece {
+	public class Queen extends Piece {
 		public Queen(String color) {
 			super(color, PieceType.queen, "queen");
 		}
