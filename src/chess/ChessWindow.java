@@ -342,7 +342,7 @@ public class ChessWindow extends JFrame {
 		public boolean isMoveValid(int dx, int dy) {
 			if (isEmpty())
 				return false;
-			return getPiece().isMoveValid(dx, dy);
+			return getPiece().isMoveLegal(dx, dy);
 		}
 
 		public boolean isUnderAttackBy(String opp) {
@@ -557,18 +557,6 @@ public class ChessWindow extends JFrame {
 			}
 		}
 
-		public boolean isMoveValid(int dx, int dy) {
-			boolean answer = true;
-			/*
-			 * Cell cell = board[m_x][m_y]; Cell dest = board[dx][dy];
-			 * //temporary //cell.setPiece(null); cell.setPiece(null); Piece
-			 * king = boardState.getKing(getColor());
-			 * //if(board[king.getPosX()][king.getPosY()].isUnderAttackBy(
-			 * getRevColor())){ // answer = false; //} cell.setPiece(this);
-			 */
-			return answer;
-		}
-
 		public boolean isMoveLegal(int dx, int dy) {
 			return true;
 		}
@@ -584,237 +572,88 @@ public class ChessWindow extends JFrame {
 	}
 
 	public class Pawn extends Piece {
+		PieceMove pieceMove;
+		
 		public Pawn(String color) {
 			super(color, PieceType.pawn, "pawn");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new PawnMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
 			int x = m_x;
 			int y = m_y;
-			if (getColor().equals("white")) {
-				if (x == 0)
-					return false;
-				if (x == 6 && xx == 4 && y == yy) {
-					if (board[xx][yy].getPiece() == null && board[x - 1][yy].getPiece() == null)
-						return true;
-				}
-				if (y == yy && x - 1 == xx && board[xx][yy].getPiece() == null) {
-					return true;
-				}
-				Piece ad;
-				if (x - 1 == xx && (y - 1 == yy || y + 1 == yy) && (ad = board[xx][yy].getPiece()) != null
-						&& ad.getColor() == "black") {
-					return true;
-				}
-				return false;
-			} else {
-				if (x == 7)
-					return false;
-				if (x == 1 && xx == 3 && y == yy) {
-					if (board[xx][yy].getPiece() == null && board[x + 1][yy].getPiece() == null)
-						return true;
-				}
-				if (y == yy && x + 1 == xx && board[xx][yy].getPiece() == null) {
-					return true;
-				}
-				Piece ad;
-				if (x + 1 == xx && (y - 1 == yy || y + 1 == yy) && (ad = board[xx][yy].getPiece()) != null
-						&& ad.getColor() == "white") {
-					return true;
-				}
-				return false;
-			}
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 		}
 	}
 
 	public class Rook extends Piece {
+		PieceMove pieceMove;
 		public Rook(String color) {
 			super(color, PieceType.rook, "rook");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new RookMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
 			int x = m_x;
 			int y = m_y;
-			if (x == xx) {
-				for (int y1 = Math.min(y, yy) + 1; y1 < Math.max(y, yy); y1++) {
-					if (board[x][y1].getPiece() != null)
-						return false;
-				}
-				if (board[xx][yy].getPiece() != null && board[xx][yy].getPiece().getColor().equals(getColor()))
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
-			if (y == yy) {
-				for (int x1 = Math.min(x, xx) + 1; x1 < Math.max(x, xx); x1++) {
-					if (board[x1][y].getPiece() != null)
-						return false;
-				}
-				if (board[xx][yy].getPiece() != null && board[xx][yy].getPiece().getColor().equals(getColor()))
-					return false;
-				return super.isMoveValid(xx, yy);
-			}
-			return false;
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 		}
 	}
 
 	public class Bishop extends Piece {
+		PieceMove pieceMove;
 		public Bishop(String color) {
 			super(color, PieceType.bishop, "bishop");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new BishopMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
 			int x = m_x;
 			int y = m_y;
-			Piece p = board[xx][yy].getPiece();
-			if (p != null && p.getColor().equals(getColor()))
-				return false;
-			if (Math.abs(x - xx) != Math.abs(y - yy))
-				return false;
-			int dx = (x > xx ? -1 : 1);
-			int dy = (y > yy ? -1 : 1);
-			x += dx;
-			y += dy;
-			while (!(x == xx && y == yy)) {
-				if (board[x][y].getPiece() != null)
-					return false;
-				x += dx;
-				y += dy;
-			}
-			return super.isMoveValid(xx, yy);
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 		}
 	}
 
 	public class King extends Piece {
 		public boolean castlingDone;
-
+		PieceMove pieceMove;
 		public King(String color) {
 			super(color, PieceType.king, "king");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new KingMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
 			int x = m_x;
 			int y = m_y;
-
-			if (!pieceMoved && x == xx/* same line */) {
-				// try casling
-				Piece rock1 = board[x][0].getPiece();
-				Piece rock2 = board[x][7].getPiece();
-				if (!rock1.hasPieceMoved()) {
-					if (Math.abs(y - yy) == 2 && yy < y) {
-						boolean castlePossible1 = true;
-						for (int y1 = 0; y1 <= y; y1++)
-							if (true/*
-									 * board[x][y1].isUnderAttackBy(getRevColor(
-									 * ))
-									 */)
-								castlePossible1 = false;
-						if (castlePossible1) {
-							// rock1.moveTo(board[x][yy+1]);
-							return true;
-						}
-					}
-				}
-				if (!rock2.hasPieceMoved()) {
-					if (Math.abs(y - yy) == 2 && y < yy) {
-						boolean castlePossible1 = true;
-						for (int y1 = y; y1 <= yy; y1++)
-							if (true/*
-									 * board[x][y1].isUnderAttackBy(getRevColor(
-									 * ))
-									 */)
-								castlePossible1 = false;
-						if (castlePossible1) {
-							// rock2.moveTo(board[x][yy-1]);
-							return true;
-						}
-					}
-				}
-			}
-			if (Math.abs(x - xx) <= 1 && Math.abs(y - yy) <= 1) {
-				if (!(board[xx][yy].getPiece() != null && board[xx][yy].getPiece().getColor().equals(getColor())))
-					return true;
-			}
-			return false;
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, pieceMoved);
 		}
 	}
 
 	public class Knight extends Piece {
+		PieceMove pieceMove;
 		public Knight(String color) {
 			super(color, PieceType.knight, "knight");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new KnightMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
 			int x = m_x;
 			int y = m_y;
-			Piece p = board[xx][yy].getPiece();
-			if (p != null && p.getColor().equals(getColor())) {
-				return false;
-			}
-			int difx = Math.abs(x - xx);
-			int dify = Math.abs(y - yy);
-			if ((difx == 1 && dify == 2) || (difx == 2 && dify == 1))
-				return super.isMoveValid(xx, yy);
-			return false;
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 		}
 	}
 
 	public class Queen extends Piece {
+		PieceMove pieceMove;
 		public Queen(String color) {
 			super(color, PieceType.queen, "queen");
-		}
-
-		public boolean isMoveValid(int xx, int yy) {
-			boolean answer = isMoveLegal(xx, yy);
-			if (answer == false)
-				return false;
-			return super.isMoveValid(xx, yy);
+			pieceMove = new QueenMove();
 		}
 
 		public boolean isMoveLegal(int xx, int yy) {
-			Rook rook = new Rook(getColor());
-			rook.setPosX(m_x);
-			rook.setPosY(m_y);
-			Bishop bishop = new Bishop(getColor());
-			bishop.setPosX(m_x);
-			bishop.setPosY(m_y);
-			boolean answer = rook.isMoveLegal(xx, yy) || bishop.isMoveLegal(xx, yy);
-			board[m_x][m_y].setPiece(this);
-			return answer;
+			int x = m_x;
+			int y = m_y;
+			return pieceMove.isValidMove(x, y, xx, yy, getColor(), board, false);
 		}
 	}
 }
