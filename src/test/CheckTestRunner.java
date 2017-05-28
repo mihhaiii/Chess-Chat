@@ -5,10 +5,7 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 public class CheckTestRunner {
-	public static void main(String[] args) {
-		Result result = JUnitCore.runClasses(ChessTest.class);
-		for (Failure failure : result.getFailures()) {
-			System.out.println(failure.toString());
-		}
-	}
+	public static void main(String args[]) {
+	      org.junit.runner.JUnitCore.main("test.ChessTest");
+	    }
 }
