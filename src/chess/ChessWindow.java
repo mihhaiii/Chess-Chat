@@ -468,7 +468,7 @@ public class ChessWindow extends JFrame{
 					setColor("white");
 				} else {
 					setBackground(Color.GRAY);
-					setColor("gray");
+					setColor("black");
 				}
 			}
 			public void setPiece(Piece p){
@@ -504,7 +504,7 @@ public class ChessWindow extends JFrame{
 			}
 			public boolean isMoveValid(int dx, int dy){
 				if (isEmpty()) return false;
-				return getPiece().isMoveValid(dx, dy);
+				return getPiece().isMoveLegal(dx, dy);
 			}
 			
 			public boolean isUnderAttackBy(String opp){
@@ -652,7 +652,7 @@ public class ChessWindow extends JFrame{
 			
 		}
 		
-		public class Piece{
+		public abstract class Piece{
 			int m_x, m_y;
 			public ImageIcon m_icon;
 			public PieceType m_type;
@@ -705,13 +705,13 @@ public class ChessWindow extends JFrame{
 					return "white";
 				}
 			}
-			public boolean isMoveValid(int dx , int dy){
-				boolean answer = true;
-				return answer;
-			}
-			public boolean isMoveLegal(int dx, int dy){
-				return true;
-			}
+			//public abstract boolean isMoveValid(int dx , int dy);//{
+				//boolean answer = true;
+				//return answer;
+			//}
+			public abstract boolean isMoveLegal(int dx, int dy);//{
+			//	return true;
+			//}
 			public void moveTo(Cell dest){
 				// make the move
 				Cell current = board[m_x][m_y];
